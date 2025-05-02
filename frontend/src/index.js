@@ -1,89 +1,44 @@
-// URL base del backend
-const baseURL = 'http://localhost:8080/motos';
+// src/index.js
+import { getById, createEl } from './documentUtil.js';
+import { confirmAction } from './dialogUtil.js';
 
-// Función para obtener y mostrar todas las motos
-async function obtenerMotos() {
-    try {
-        const response = await axios.get(baseURL);
-        const motos = response.data;
-        const listaMotos = document.getElementById('listaMotos');
-        listaMotos.innerHTML = ''; // Limpiar la lista antes de agregar elementos
-        motos.forEach(moto => {
-            const li = document.createElement('li');
-            li.textContent = `${moto.modelo} (${moto.marca}, ${moto.año}) - ${moto.tipo}`;
-            // Botón para editar
-            const btnEditar = document.createElement('button');
-            btnEditar.textContent = 'Editar';
-            btnEditar.onclick = () => mostrarFormularioEdicion(moto);
-            // Botón para eliminar
-            const btnEliminar = document.createElement('button');
-            btnEliminar.textContent = 'Eliminar';
-            btnEliminar.onclick = () => eliminarMoto(moto.modelo);
-            li.appendChild(btnEditar);
-            li.appendChild(btnEliminar);
-            listaMotos.appendChild(li);
-        });
-    } catch (error) {
-        console.error('Error al obtener las motos:', error);
-    }
+const API = '/motos';
+
+async function loadMotos() {
+  const tbody = getById('motos-table').querySelector('tbody');
+  tbody.innerHTML = '';
+  try {
+    const res = await fetch(API);
+    const motos = await res.json();
+    motos.forEach(moto => {
+      const tr = createEl('tr');
+      ['modelo','marca','año','tipo'].forEach(p => {
+        const td = createEl('td');
+        td.textContent = moto[p];
+        tr.appendChild(td);
+      });
+      const acciones = createEl('td');
+      const btnE = createEl('button');
+      btnE.textContent = 'Editar';
+      btnE.onclick = () =>
+        window.location.href = `modify.html?modelo=${encodeURIComponent(moto.modelo)}`;
+      const btnD = createEl('button');
+      btnD.textContent = 'Eliminar';
+      btnD.onclick = async () => {
+        if (confirmAction('¿Eliminar esta moto?')) {
+          await fetch(`${API}/${encodeURIComponent(moto.modelo)}`, { method:'DELETE' });
+          loadMotos();
+        }
+      };
+      acciones.appendChild(btnE);
+      acciones.appendChild(btnD);
+      tr.appendChild(acciones);
+      tbody.appendChild(tr);
+    });
+  } catch {
+    alert('Error al cargar motos');
+  }
 }
 
-// Función para agregar una nueva moto
-async function agregarMoto(event) {
-    event.preventDefault();
-    const modelo = document.getElementById('modelo').value;
-    const marca = document.getElementById('marca').value;
-    const año = parseInt(document.getElementById('año').value);
-    const tipo = document.getElementById('tipo').value;
-
-    try {
-        await axios.post(baseURL, { modelo, marca, año, tipo });
-        obtenerMotos(); // Actualizar la lista de motos
-        document.getElementById('formMoto').reset(); // Limpiar el formulario
-    } catch (error) {
-        console.error('Error al agregar la moto:', error);
-    }
-}
-
-// Función para mostrar el formulario de edición con los datos de la moto seleccionada
-function mostrarFormularioEdicion(moto) {
-    document.getElementById('modelo').value = moto.modelo;
-    document.getElementById('marca').value = moto.marca;
-    document.getElementById('año').value = moto.año;
-    document.getElementById('tipo').value = moto.tipo;
-    document.getElementById('btnGuardar').onclick = (event) => editarMoto(event, moto.modelo);
-}
-
-// Función para editar una moto existente
-async function editarMoto(event, modeloOriginal) {
-    event.preventDefault();
-    const modelo = document.getElementById('modelo').value;
-    const marca = document.getElementById('marca').value;
-    const año = parseInt(document.getElementById('año').value);
-    const tipo = document.getElementById('tipo').value;
-
-    try {
-        await axios.put(`${baseURL}/${modeloOriginal}`, { modelo, marca, año, tipo });
-        obtenerMotos(); // Actualizar la lista de motos
-        document.getElementById('formMoto').reset(); // Limpiar el formulario
-        document.getElementById('btnGuardar').onclick = agregarMoto; // Restaurar la función original del botón
-    } catch (error) {
-        console.error('Error al editar la moto:', error);
-    }
-}
-
-// Función para eliminar una moto
-async function eliminarMoto(modelo) {
-    try {
-        await axios.delete(`${baseURL}/${modelo}`);
-        obtenerMotos(); // Actualizar la lista de motos
-    } catch (error) {
-        console.error('Error al eliminar la moto:', error);
-    }
-}
-
-// Asignar la función de agregar moto al botón de guardar
-document.getElementById('btnGuardar').onclick = agregarMoto;
-
-// Cargar la lista de motos al cargar la página
-window.onload = obtenerMotos;
+getById('btn-new').onclick = () => window.location.href = 'register.html';
+document.addEventListener('DOMContentLoaded', loadMotos);

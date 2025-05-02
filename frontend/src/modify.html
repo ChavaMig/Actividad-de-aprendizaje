@@ -1,0 +1,18 @@
+<!-- src/modify.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><title>Modificar Moto</title></head>
+<body>
+  <h1>Modificar Moto</h1>
+  <form id="modify-form">
+    <label>Original: <input type="text" id="original-modelo" readonly></label><br>
+    <label>Modelo:   <input type="text" id="modelo" required></label><br>
+    <label>Marca:    <input type="text" id="marca"  required></label><br>
+    <label>Año:      <input type="number" id="anio"  required></label><br>
+    <label>Tipo:     <input type="text" id="tipo"   required></label><br>
+    <button type="submit">Actualizar</button>
+    <button type="button" id="btn-cancel">Cancelar</button>
+  </form>
+  <script type="module" src="./modify.js"></script>
+</body>
+</html>
