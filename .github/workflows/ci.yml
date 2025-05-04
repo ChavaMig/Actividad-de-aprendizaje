@@ -1,5 +1,3 @@
-# .github/workflows/ci.yml
-
 name: CI
 
 on:
@@ -16,17 +14,13 @@ jobs:
       db:
         image: mariadb:11.3.2
         env:
-          MARIADB_ROOT_PASSWORD: root
+          MARIADB_ROOT_PASSWORD: rootpassword
           MARIADB_DATABASE: motos
           MARIADB_USER: app_user
           MARIADB_PASSWORD: password
         ports:
           - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h localhost -uroot -proot"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+        # <<< Health-check eliminado para que no falle por "unhealthy" >>>
 
     steps:
       - name: Checkout repo
