@@ -1,3 +1,5 @@
+# .github/workflows/ci.yml
+
 name: CI
 
 on:
@@ -20,7 +22,7 @@ jobs:
           MARIADB_PASSWORD: password
         ports:
           - 3306:3306
-        # Sin healthcheck para no quedar "unhealthy"
+        # healthcheck eliminado para no bloquear por "unhealthy"
 
     steps:
       - name: Checkout repo
@@ -32,20 +34,25 @@ jobs:
           node-version: "18"
           cache: "npm"
 
+      - name: List workspace
+        run: |
+          pwd
+          ls -R .
+
       - name: Run unit tests
-        working-directory: backend       # <-- aquí sólo 'backend', no más niveles
+        working-directory: Backend
         run: |
           npm install
           npm run unit-test
 
       - name: Set DB host to localhost for CI
-        working-directory: backend
+        working-directory: Backend
         run: |
           sed -i 's/host: .*/host: localhost/' src/config/config.prod.yaml
           cp src/config/config.prod.yaml src/config/config.local.yaml
 
       - name: Run integration tests
-        working-directory: backend
+        working-directory: Backend
         run: npm run integration-test
 
   build-and-push:
@@ -73,8 +80,8 @@ jobs:
       - name: Build & push backend image
         uses: docker/build-push-action@v4
         with:
-          context: backend            
-          file: backend/Dockerfile
+          context: Backend
+          file: Backend/Dockerfile
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/motos-backend:latest
