@@ -2,22 +2,31 @@
 
 const express = require('express');
 const cors = require('cors');
-const knex = require('knex');
-
-// Configuración y métricas
-const { config } = require('./config/configuration');
 const promClient = require('prom-client');
+
+const { config } = require('./config/configuration');
 const {
   httpRequestDurationSeconds,
   httpRequestsTotal,
   inFlightRequests
 } = require('./config/metrics');
 
+// Importamos la conexión ya configurada
+const db = require('./config/database');
+
 // Rutas
-const motosRoutes = require('./route/motos');
+const motosRoutes   = require('./route/motos');
+const pilotosRoutes = require('./route/pilotos');
 
 const app = express();
-app.use(cors());
+
+// CORS
+const corsOptions = {
+  origin: 'http://localhost:1234',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type']
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // ——— Prometheus metrics ———
@@ -26,7 +35,7 @@ app.use((req, res, next) => {
   inFlightRequests.inc();
   const end = httpRequestDurationSeconds.startTimer();
   const method = req.method;
-  const path = req.route ? req.route.path : req.path;
+  const path   = req.route ? req.route.path : req.path;
 
   res.on('finish', () => {
     const code = res.statusCode;
@@ -38,42 +47,29 @@ app.use((req, res, next) => {
   next();
 });
 
-// Endpoint para métricas
+// Métricas expuestas
 app.get('/metrics', async (req, res) => {
   res.set('Content-Type', promClient.register.contentType);
   res.end(await promClient.register.metrics());
 });
 
-// ——— Inicialización de la base de datos ———
-const db = knex({
-  client: config.db.client,
-  connection:
-    config.db.client === 'sqlite3'
-      ? { filename: config.db.filename }
-      : {
-          host:     config.db.host,
-          user:     config.db.user,
-          password: config.db.password,
-          database: config.db.database
-        },
-  useNullAsDefault: config.db.client === 'sqlite3'
-});
-
-// ——— Inyectar db en cada petición ———
+// —— Inyectamos la instancia de BD en cada petición ——
 app.use((req, res, next) => {
-  req.app = { db };
+  // Para que tus controllers sigan usando req.app.db:
+  req.app.db = db;
   next();
 });
 
-// ——— Ruta raíz de bienvenida ———
+// Ruta raíz
 app.get('/', (req, res) => {
-  res.send('🚀 API de Motos: usa /motos o /metrics');
+  res.send('🚀 API de Motos y Pilotos: usa /motos, /pilotos o /metrics');
 });
 
-// ——— Montaje de rutas de motos ———
+// Montamos rutas
 app.use('/motos', motosRoutes);
+app.use('/pilotos', pilotosRoutes);
 
-// ——— Arranque del servidor sólo si se ejecuta directamente ———
+// Arranque del servidor
 if (require.main === module) {
   const PORT = process.env.PORT || config.service.port;
   app.listen(PORT, () => {
@@ -81,5 +77,4 @@ if (require.main === module) {
   });
 }
 
-// Export para tests
 module.exports = { app, db };

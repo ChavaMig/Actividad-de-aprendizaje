@@ -7,22 +7,30 @@ const { describe, it, expect, afterEach } = require('@jest/globals');
 jest.mock('../../services/motos.service');
 const motosService = require('../../services/motos.service');
 
-// Nuestros datos de prueba
-const { mockMotoArray, mockMotoToCreate, mockMotoCreated } =
-  require('./mocks/motos');
+// Datos de prueba
+const {
+  mockMotoArray,
+  mockMotoToCreate,
+  mockMotoCreated
+} = require('./mocks/motos');
 
-// Importamos el controller desde src/controller (singular)
-const { getMotos, postMoto } = require('../../controller/motos.controller');
+// Importamos el controller completo
+const {
+  getMotos,
+  getMoto,
+  postMoto,
+  putMoto,
+  deleteMoto
+} = require('../../controller/motos.controller');
 
 afterEach(() => {
   jest.clearAllMocks();
 });
 
-describe('motos', () => {
+describe('Motos Controller (unit)', () => {
   describe('GET /motos', () => {
-    it('should get all motos', async () => {
-      motosService.findAll.mockResolvedValue(mockMotoArray);
-
+    it('should return empty array initially', async () => {
+      motosService.findAll.mockResolvedValue([]);
       const req = httpMocks.createRequest();
       req.app = { db: {} };
       const res = httpMocks.createResponse();
@@ -31,32 +39,53 @@ describe('motos', () => {
 
       expect(motosService.findAll).toHaveBeenCalledWith(req.app.db);
       expect(res.statusCode).toBe(200);
-      expect(res._getJSONData().length).toBe(mockMotoArray.length);
+      expect(res._getJSONData()).toEqual([]);
+    });
+  });
+
+  describe('GET /motos/:modelo', () => {
+    it('should 200 and return one moto if exists', async () => {
+      motosService.findByModelo.mockResolvedValue(mockMotoArray[0]);
+      const req = httpMocks.createRequest({ params: { modelo: 'Yamaha R1' } });
+      req.app = { db: {} };
+      const res = httpMocks.createResponse();
+
+      await getMoto(req, res);
+
+      expect(motosService.findByModelo).toHaveBeenCalledWith(req.app.db, 'Yamaha R1');
+      expect(res.statusCode).toBe(200);
+      expect(res._getJSONData()).toEqual(mockMotoArray[0]);
+    });
+
+    it('should 404 if moto not found', async () => {
+      motosService.findByModelo.mockResolvedValue(null);
+      const req = httpMocks.createRequest({ params: { modelo: 'NoExiste' } });
+      req.app = { db: {} };
+      const res = httpMocks.createResponse();
+
+      await getMoto(req, res);
+
+      expect(res.statusCode).toBe(404);
+      expect(res._getJSONData()).toHaveProperty('status', 'not-found');
     });
   });
 
   describe('POST /motos', () => {
     it('should create a new moto', async () => {
       motosService.create.mockResolvedValue(mockMotoCreated);
-
       const req = httpMocks.createRequest({ body: mockMotoToCreate });
       req.app = { db: {} };
       const res = httpMocks.createResponse();
 
       await postMoto(req, res);
 
-      expect(motosService.create).toHaveBeenCalledWith(
-        req.app.db,
-        mockMotoToCreate
-      );
+      expect(motosService.create).toHaveBeenCalledWith(req.app.db, mockMotoToCreate);
       expect(res.statusCode).toBe(201);
       expect(res._getJSONData()).toEqual(mockMotoCreated);
     });
 
-    it('validation should fail because modelo is mandatory', async () => {
-      const req = httpMocks.createRequest({
-        body: { marca: 'Honda', año: 2019, tipo: 'Naked' }
-      });
+    it('should return 400 on missing required field', async () => {
+      const req = httpMocks.createRequest({ body: { marca: 'NoModelo', año: 2025, tipo: 'X' } });
       req.app = { db: {} };
       const res = httpMocks.createResponse();
 
@@ -68,21 +97,63 @@ describe('motos', () => {
         message: 'modelo field is mandatory'
       });
     });
+  });
 
-    it('validation should fail because año must be a positive number', async () => {
+  describe('PUT /motos/:modelo', () => {
+    it('should 204 on successful update', async () => {
+      motosService.update.mockResolvedValue(1);
       const req = httpMocks.createRequest({
-        body: { modelo: 'Test', marca: 'Test', año: 0, tipo: 'Test' }
+        params: { modelo: 'Yamaha R1' },
+        body: mockMotoToCreate
       });
       req.app = { db: {} };
       const res = httpMocks.createResponse();
 
-      await postMoto(req, res);
+      await putMoto(req, res);
 
-      expect(res.statusCode).toBe(400);
-      expect(res._getJSONData()).toEqual({
-        status: 'bad-request',
-        message: 'año must be a positive number'
+      expect(motosService.update).toHaveBeenCalledWith(req.app.db, 'Yamaha R1', mockMotoToCreate);
+      expect(res.statusCode).toBe(204);
+    });
+
+    it('should 404 if no rows updated', async () => {
+      motosService.update.mockResolvedValue(0);
+      const req = httpMocks.createRequest({
+        params: { modelo: 'NoExiste' },
+        body: mockMotoToCreate
       });
+      req.app = { db: {} };
+      const res = httpMocks.createResponse();
+
+      await putMoto(req, res);
+
+      expect(res.statusCode).toBe(404);
+      expect(res._getJSONData()).toHaveProperty('status', 'not-found');
+    });
+  });
+
+  describe('DELETE /motos/:modelo', () => {
+    it('should 204 on successful delete', async () => {
+      motosService.remove.mockResolvedValue(1);
+      const req = httpMocks.createRequest({ params: { modelo: 'Yamaha R1' } });
+      req.app = { db: {} };
+      const res = httpMocks.createResponse();
+
+      await deleteMoto(req, res);
+
+      expect(motosService.remove).toHaveBeenCalledWith(req.app.db, 'Yamaha R1');
+      expect(res.statusCode).toBe(204);
+    });
+
+    it('should 404 if nothing deleted', async () => {
+      motosService.remove.mockResolvedValue(0);
+      const req = httpMocks.createRequest({ params: { modelo: 'NoExiste' } });
+      req.app = { db: {} };
+      const res = httpMocks.createResponse();
+
+      await deleteMoto(req, res);
+
+      expect(res.statusCode).toBe(404);
+      expect(res._getJSONData()).toHaveProperty('status', 'not-found');
     });
   });
 });

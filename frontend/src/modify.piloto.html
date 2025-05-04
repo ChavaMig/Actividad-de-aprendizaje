@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Modificar Moto | MOTOS_AA</title>
+  <title>Modificar Piloto | MOTOS_AA</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -102,27 +102,25 @@
     <h1>MOTOS_AA</h1>
   </header>
   <main>
-    <h1>Modificar Moto</h1>
-    <form id="modify-form">
+    <h1>Modificar Piloto</h1>
+    <form id="modify.piloto-form">
       <label>
-        Original:
-        <input type="text" id="original-modelo" readonly>
+        ID:
+        <input type="text" id="id" readonly>
       </label>
       <label>
-        Modelo:
-        <input type="text" id="modelo" required>
+        Nombre:
+        <input type="text" id="nombre" required>
       </label>
       <label>
-        Marca:
-        <input type="text" id="marca" required>
+        Edad:
+        <input type="number" id="edad" required>
       </label>
       <label>
-        Año:
-        <input type="number" id="anio" required>
-      </label>
-      <label>
-        Tipo:
-        <input type="text" id="tipo" required>
+        Moto:
+        <select id="motoModelo" required>
+          <option disabled value="">Seleccione una moto</option>
+        </select>
       </label>
       <div style="margin-top:1.5rem; display:flex; gap:1rem;">
         <button type="submit">Actualizar</button>
@@ -133,6 +131,6 @@
   <footer>
     MIGUEL CHAVARRIAS – ENTORNOS
   </footer>
-  <script type="module" src="./modify.js"></script>
+  <script type="module" src="./modify.piloto.js"></script>
 </body>
 </html>

@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  # Job de tests
+  
+  test:
+    runs-on: ubuntu-latest
+
+    # Levantamos un servicio de MariaDB igual que en tu entorno de tests local
+    services:
+      db:
+        image: mariadb:11.3.2
+        env:
+          MARIADB_ROOT_PASSWORD: rootpassword
+          MARIADB_DATABASE: motos
+          MARIADB_USER: app_user
+          MARIADB_PASSWORD: password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      # 2.1 Checkout de tu código
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      # 2.2 Instalar Node.js y cachear npm
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      # 2.3 Instalar deps y correr unit tests
+      - name: Run unit tests
+        working-directory: backend
+        run: |
+          npm install
+          npm run unit-test
+
+      # 2.4 Preparar config para integración
+      #     Copia tu config.prod.yaml sobre config.local.yaml
+      - name: Use prod config for integration
+        working-directory: backend
+        run: cp src/config/config.prod.yaml src/config/config.local.yaml
+
+      # 2.5 Correr integration tests
+      - name: Run integration tests
+        working-directory: backend
+        run: npm run integration-test
+
+  
+  # Build y push
+  
+  build-and-push:
+    needs: test                   # sólo corre si test pasa
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'  # opcional: sólo en la rama main
+
+    steps:
+      # 3.1 Checkout
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      # 3.2 Preparar Buildx (para multi-arch si quisieras)
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # 3.3 Login al GH Container Registry
+      - name: Login to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 3.4 Build & Push backend
+      - name: Build & push backend image
+        uses: docker/build-push-action@v4
+        with:
+          context: backend
+          file: backend/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/motos-backend:latest
+            ghcr.io/${{ github.repository_owner }}/motos-backend:${{ github.sha }}
+
+      # 3.5 Build & Push frontend
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v4
+        with:
+          context: frontend
+          file: frontend/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/motos-frontend:latest
+            ghcr.io/${{ github.repository_owner }}/motos-frontend:${{ github.sha }}

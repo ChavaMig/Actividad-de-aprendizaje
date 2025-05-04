@@ -1,17 +1,139 @@
-<!-- src/register.html -->
 <!DOCTYPE html>
 <html lang="es">
-<head><meta charset="UTF-8"><title>Registrar Moto</title></head>
+<head>
+  <meta charset="UTF-8">
+  <title>Registrar Moto | MOTOS_AA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #121212;
+      --fg: #e0e0e0;
+      --accent: #ff6200;
+      --panel-bg: #1e1e1e;
+      --border: #333;
+      --header-height: 60px;
+      --footer-height: 40px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+    }
+    header {
+      height: var(--header-height);
+      background: var(--panel-bg);
+      display: flex;
+      align-items: center;
+      padding: 0 2rem;
+      border-bottom: 2px solid var(--accent);
+    }
+    header h1 {
+      font-size: 1.5rem;
+      color: var(--accent);
+    }
+    main {
+      flex: 1;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      color: var(--accent);
+    }
+    form {
+      background: var(--panel-bg);
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.7);
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    label {
+      display: block;
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+    input {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+      margin-bottom: 0.75rem;
+      background: #2a2a2a;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--fg);
+    }
+    .actions {
+      margin-top: 1.5rem;
+      display: flex;
+      gap: 1rem;
+    }
+    button {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: 4px;
+      padding: 0.6rem 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #e65500;
+    }
+    .btn-cancel {
+      background: #555;
+    }
+    .btn-cancel:hover {
+      background: #444;
+    }
+    footer {
+      height: var(--footer-height);
+      background: var(--panel-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-top: 2px solid var(--accent);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
 <body>
-  <h1>Registrar Moto</h1>
-  <form id="register-form">
-    <label>Modelo: <input type="text" id="modelo" required></label><br>
-    <label>Marca:  <input type="text" id="marca"  required></label><br>
-    <label>Año:    <input type="number" id="anio"  required></label><br>
-    <label>Tipo:   <input type="text" id="tipo"   required></label><br>
-    <button type="submit">Guardar</button>
-    <button type="button" id="btn-cancel">Cancelar</button>
-  </form>
+  <header>
+    <h1>MOTOS_AA</h1>
+  </header>
+  <main>
+    <h1>Registrar Nueva Moto</h1>
+    <form id="register-form">
+      <label>
+        Modelo:
+        <input type="text" id="modelo" required>
+      </label>
+      <label>
+        Marca:
+        <input type="text" id="marca" required>
+      </label>
+      <label>
+        Año:
+        <input type="number" id="anio" required>
+      </label>
+      <label>
+        Tipo:
+        <input type="text" id="tipo" required>
+      </label>
+      <div class="actions">
+        <button type="submit">Guardar</button>
+        <button type="button" id="btn-cancel" class="btn-cancel">Cancelar</button>
+      </div>
+    </form>
+  </main>
+  <footer>
+    MIGUEL CHAVARRIAS – ENTORNOS
+  </footer>
   <script type="module" src="./register.js"></script>
 </body>
 </html>

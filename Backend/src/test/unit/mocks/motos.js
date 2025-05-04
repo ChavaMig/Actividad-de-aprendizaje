@@ -1,5 +1,3 @@
-// Backend/src/test/unit/mocks/motos.js
-
 exports.mockMotoArray = [
   { id: 1, modelo: 'Yamaha R1',    marca: 'Yamaha',   año: 2020, tipo: 'Deportiva' },
   { id: 2, modelo: 'Honda CB500',  marca: 'Honda',    año: 2019, tipo: 'Naked'      }

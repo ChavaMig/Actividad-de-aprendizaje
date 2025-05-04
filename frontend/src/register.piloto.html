@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Modificar Moto | MOTOS_AA</title>
+  <title>Registrar Piloto | MOTOS_AA</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -67,6 +67,11 @@
       border-radius: 4px;
       color: var(--fg);
     }
+    .actions {
+      margin-top: 1.5rem;
+      display: flex;
+      gap: 1rem;
+    }
     button {
       background: var(--accent);
       color: var(--bg);
@@ -102,30 +107,24 @@
     <h1>MOTOS_AA</h1>
   </header>
   <main>
-    <h1>Modificar Moto</h1>
-    <form id="modify-form">
+    <h1>Registrar Nuevo Piloto</h1>
+    <form id="register.piloto-form">
       <label>
-        Original:
-        <input type="text" id="original-modelo" readonly>
+        Nombre:
+        <input type="text" id="nombre" required>
       </label>
       <label>
-        Modelo:
-        <input type="text" id="modelo" required>
+        Edad:
+        <input type="number" id="edad" required>
       </label>
       <label>
-        Marca:
-        <input type="text" id="marca" required>
+        Moto:
+        <select id="motoModelo" required>
+          <option disabled selected value="">Seleccione una moto</option>
+        </select>
       </label>
-      <label>
-        Año:
-        <input type="number" id="anio" required>
-      </label>
-      <label>
-        Tipo:
-        <input type="text" id="tipo" required>
-      </label>
-      <div style="margin-top:1.5rem; display:flex; gap:1rem;">
-        <button type="submit">Actualizar</button>
+      <div class="actions">
+        <button type="submit">Guardar</button>
         <button type="button" id="btn-cancel" class="btn-cancel">Cancelar</button>
       </div>
     </form>
@@ -133,6 +132,6 @@
   <footer>
     MIGUEL CHAVARRIAS – ENTORNOS
   </footer>
-  <script type="module" src="./modify.js"></script>
+  <script type="module" src="./register.piloto.js"></script>
 </body>
 </html>
