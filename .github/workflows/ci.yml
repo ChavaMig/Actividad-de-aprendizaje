@@ -20,7 +20,7 @@ jobs:
           MARIADB_PASSWORD: password
         ports:
           - 3306:3306
-        # eliminamos healthcheck para que no falle por "unhealthy"
+        # Sin healthcheck para no quedar "unhealthy"
 
     steps:
       - name: Checkout repo
@@ -33,19 +33,19 @@ jobs:
           cache: "npm"
 
       - name: Run unit tests
-        working-directory: Actividad-de-aprendizaje/backend
+        working-directory: backend       # <-- aquí sólo 'backend', no más niveles
         run: |
           npm install
           npm run unit-test
 
       - name: Set DB host to localhost for CI
-        working-directory: Actividad-de-aprendizaje/backend
+        working-directory: backend
         run: |
           sed -i 's/host: .*/host: localhost/' src/config/config.prod.yaml
           cp src/config/config.prod.yaml src/config/config.local.yaml
 
       - name: Run integration tests
-        working-directory: Actividad-de-aprendizaje/backend
+        working-directory: backend
         run: npm run integration-test
 
   build-and-push:
@@ -73,8 +73,8 @@ jobs:
       - name: Build & push backend image
         uses: docker/build-push-action@v4
         with:
-          context: Actividad-de-aprendizaje/backend
-          file: Actividad-de-aprendizaje/backend/Dockerfile
+          context: backend            
+          file: backend/Dockerfile
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/motos-backend:latest
@@ -83,8 +83,8 @@ jobs:
       - name: Build & push frontend image
         uses: docker/build-push-action@v4
         with:
-          context: Actividad-de-aprendizaje/frontend
-          file: Actividad-de-aprendizaje/frontend/Dockerfile
+          context: frontend
+          file: frontend/Dockerfile
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/motos-frontend:latest
