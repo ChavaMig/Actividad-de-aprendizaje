@@ -1,0 +1,35 @@
+services:
+  
+  db:
+    image: mariadb:11.3.2
+    container_name: motos-db-test
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpassword
+      MARIADB_DATABASE: motos
+      MARIADB_USER: app_user
+      MARIADB_PASSWORD: password
+    ports:
+      - "3307:3306"        
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d:ro
+    networks:
+      - test-net
+
+
+  integration_tests:
+    image: node:18-alpine
+    container_name: motos-integration-tests
+    working_dir: /usr/src/app
+    volumes:
+      - ./backend:/usr/src/app
+      - ./backend/src/config/config.prod.yaml:/usr/src/app/src/config/config.local.yaml:ro
+    command: >
+      sh -c "npm install && npm test"
+    depends_on:
+      - db
+    networks:
+      - test-net
+
+networks:
+  test-net:
+    driver: bridge
