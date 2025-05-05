@@ -11,7 +11,7 @@ const {
   inFlightRequests
 } = require('./config/metrics');
 
-// Importamos la conexión ya configurada
+// Importa la conexión ya configurada
 const db = require('./config/database');
 
 // Rutas
@@ -29,7 +29,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// ——— Prometheus metrics ———
+// Prometheus metrics 
 promClient.collectDefaultMetrics();
 app.use((req, res, next) => {
   inFlightRequests.inc();
@@ -53,19 +53,18 @@ app.get('/metrics', async (req, res) => {
   res.end(await promClient.register.metrics());
 });
 
-// —— Inyectamos la instancia de BD en cada petición ——
+
 app.use((req, res, next) => {
-  // Para que tus controllers sigan usando req.app.db:
   req.app.db = db;
   next();
 });
 
-// Ruta raíz
+
 app.get('/', (req, res) => {
   res.send('🚀 API de Motos y Pilotos: usa /motos, /pilotos o /metrics');
 });
 
-// Montamos rutas
+// Monta rutas
 app.use('/motos', motosRoutes);
 app.use('/pilotos', pilotosRoutes);
 
