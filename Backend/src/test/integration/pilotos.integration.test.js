@@ -1,5 +1,3 @@
-// Backend/src/test/integration/pilotos.integration.test.js
-
 const chai = require('chai');
 const expect = chai.expect;
 const chaiHttp = require('chai-http');
@@ -10,7 +8,7 @@ chai.should();
 
 describe('pilotos', () => {
   before((done) => {
-    // 1) Asegurar tabla motos
+    // Asegurar tabla motos
     db.schema.hasTable('motos')
       .then(exists => {
         if (!exists) {
@@ -23,7 +21,7 @@ describe('pilotos', () => {
           });
         }
       })
-      // 2) Asegurar tabla pilotos
+      // Asegurar tabla pilotos
       .then(() => db.schema.hasTable('pilotos'))
       .then(exists => {
         if (!exists) {
@@ -38,14 +36,14 @@ describe('pilotos', () => {
           });
         }
       })
-      // 3) Limpiar datos antiguos
+      // Limpiar datos antiguos
       .then(() => db('pilotos').del())
       .then(() => db('motos').del())
-      // 4) Insertar una moto y usar su ID
+      // Insertar una moto y usar su ID
       .then(() => db('motos').insert({ modelo: 'Seed1', marca: 'M1', año: 2000, tipo: 'X' }))
       .then(insertIds => {
         const motoId = insertIds[0];
-        // 5) Insertar pilotos referenciando esa moto
+        //  Insertar pilotos con referencia a esa moto
         return db('pilotos').insert([
           { nombre: 'P1', nacionalidad: 'N1', edad: 30, moto_id: motoId },
           { nombre: 'P2', nacionalidad: 'N2', edad: 25, moto_id: motoId }
@@ -93,7 +91,6 @@ describe('pilotos', () => {
           .end((err, res) => {
             res.should.have.status(400);
             expect(res.body.status).to.equal('bad-request');
-            // Aseguramos el mensaje genérico que devuelve el controller
             expect(res.body.message).to.equal('Faltan campos obligatorios');
             done();
           });

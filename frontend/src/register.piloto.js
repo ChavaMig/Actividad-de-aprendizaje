@@ -1,4 +1,3 @@
-// src/register-piloto.js
 import axios from 'axios';
 import { getById } from './documentUtil.js';
 
@@ -11,7 +10,7 @@ async function loadMotosOptions() {
     const select = getById('motoModelo');
     motos.forEach(m => {
       const opt = document.createElement('option');
-      opt.value = m.id;                       // <--- id de la moto
+      opt.value = m.id;   /* ID MOTO*/                   
       opt.textContent = `${m.modelo} (${m.marca})`;
       select.appendChild(opt);
     });

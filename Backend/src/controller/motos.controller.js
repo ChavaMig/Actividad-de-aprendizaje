@@ -7,7 +7,7 @@ const {
     remove
   } = require('../services/motos.service');
   
-  /* Devuelve el listado de todas las motos */
+  /* GET DE MOTOS */
   const getMotos = async (req, res) => {
     try {
       const motos = await findAll(req.app.db);
@@ -17,7 +17,6 @@ const {
     }
   };
   
-  /* Devuelve una sola moto por su modelo*/
   const getMoto = async (req, res) => {
     const { modelo } = req.params;
   
@@ -42,7 +41,7 @@ const {
     }
   };
   
-  /* Crea una nueva moto */
+  /* POST DE MOTOS */
   const postMoto = async (req, res) => {
     const { modelo, marca, año, tipo } = req.body;
   
@@ -80,7 +79,7 @@ const {
     }
   };
   
-  /* Actualiza una moto existente*/
+  /* PUT DE MOTOS */
   const putMoto = async (req, res) => {
     const modeloOriginal = req.params.modelo;
     const { modelo: modeloNuevo, marca, año, tipo } = req.body;
@@ -116,7 +115,7 @@ const {
     }
   };
   
-  /* Elimina una moto por su modelo*/
+  /* DELETE DE MOTOS */
   const deleteMoto = async (req, res) => {
     const { modelo } = req.params;
   

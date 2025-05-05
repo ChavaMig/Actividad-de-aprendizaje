@@ -16,7 +16,7 @@ const {
     }
   };
   
-  /* GET piloto por ID */
+  /* GET pilotos */
   const getPiloto = async (req, res) => {
     const { id } = req.params;
     try {
@@ -30,7 +30,7 @@ const {
     }
   };
   
-  /* POST nuevo piloto */
+  /* POST pilotos */
   const postPiloto = async (req, res) => {
     const { nombre, nacionalidad, edad, moto_id } = req.body;
   
@@ -46,7 +46,7 @@ const {
     }
   };
   
-  /* PUT modificar piloto */
+  /* PUT pilotos */
   const putPiloto = async (req, res) => {
     const { id } = req.params;
     const { nombre, nacionalidad, edad, moto_id } = req.body;

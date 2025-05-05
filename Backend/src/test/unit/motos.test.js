@@ -1,9 +1,7 @@
-// Backend/src/test/unit/motos.test.js
-
 const httpMocks = require('node-mocks-http');
 const { describe, it, expect, afterEach } = require('@jest/globals');
 
-// Mockeamos el service
+// Mock del service
 jest.mock('../../services/motos.service');
 const motosService = require('../../services/motos.service');
 
@@ -14,7 +12,7 @@ const {
   mockMotoCreated
 } = require('./mocks/motos');
 
-// Importamos el controller completo
+// Importa el controller
 const {
   getMotos,
   getMoto,

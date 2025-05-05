@@ -13,7 +13,7 @@ async function loadMotos() {
   tbody.innerHTML = '';
   try {
     const { data: motos } = await axios.get(API_MOTOS);
-    motosCache = motos; // guarda para usar al mostrar pilotos
+    motosCache = motos; 
     motos.forEach(moto => {
       const tr = createEl('tr');
       ['modelo','marca','año','tipo'].forEach(prop => {
@@ -45,7 +45,6 @@ async function loadMotos() {
   }
 }
 
-// Carga Pilotos y usa motosCache para mostrar el modelo
 async function loadPilotos() {
   const tbody = getById('pilotos-table').querySelector('tbody');
   tbody.innerHTML = '';
@@ -59,11 +58,12 @@ async function loadPilotos() {
         td.textContent = p[prop];
         tr.appendChild(td);
       });
-      // Mostrar modelo de la moto asignada
+      // Modelo de la moto asignada
       const tdMoto = createEl('td');
       const moto = motosCache.find(m => m.id === p.moto_id);
       tdMoto.textContent = moto ? moto.modelo : '—';
       tr.appendChild(tdMoto);
+      
       // Acciones
       const acciones = createEl('td');
       const btnE = createEl('button');
