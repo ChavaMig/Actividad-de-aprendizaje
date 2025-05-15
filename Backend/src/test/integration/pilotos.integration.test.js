@@ -1,3 +1,5 @@
+// Backend/src/test/integration/pilotos.integration.test.js
+
 const chai = require('chai');
 const expect = chai.expect;
 const chaiHttp = require('chai-http');
@@ -39,13 +41,18 @@ describe('pilotos', () => {
       // Limpiar datos antiguos
       .then(() => db('pilotos').del())
       .then(() => db('motos').del())
-      // Insertar una moto y usar su ID
-      .then(() => db('motos').insert({ modelo: 'Seed1', marca: 'M1', año: 2000, tipo: 'X' }))
+      // Insertar una moto representativa
+      .then(() => db('motos').insert({
+        modelo: 'Honda CBR600RR',
+        marca: 'Honda',
+        año: 2000,
+        tipo: 'Deportiva'
+      }))
       .then(insertIds => {
         const motoId = insertIds[0];
-        // Insertar pilotos con referencia a esa moto
+        // Insertar pilotos vinculados
         return db('pilotos').insert([
-          { nombre: 'Marc Marquez', nacionalidad: 'ESP', edad: 30, moto_id: motoId },
+          { nombre: 'Marc Márquez', nacionalidad: 'ESP', edad: 30, moto_id: motoId },
           { nombre: 'Valentino Rossi', nacionalidad: 'ITA', edad: 40, moto_id: motoId }
         ]);
       })
@@ -60,8 +67,7 @@ describe('pilotos', () => {
         .end((err, res) => {
           res.should.have.status(200);
           res.body.should.be.a('array');
-          // Validar nombres de pilotos según los datos seed actualizados
-          expect(res.body[0]).to.have.property('nombre', 'Marc Marquez');
+          expect(res.body[0]).to.have.property('nombre', 'Marc Márquez');
           expect(res.body[1]).to.have.property('nombre', 'Valentino Rossi');
           done();
         });
@@ -70,15 +76,14 @@ describe('pilotos', () => {
 
   describe('POST /pilotos', () => {
     it('should register a new piloto', (done) => {
-      // obtener moto existente
       db('motos').first('id').then(({ id }) => {
         chai.request(app)
           .post('/pilotos')
-          .send({ nombre: 'P3', nacionalidad: 'N3', edad: 28, moto_id: id })
+          .send({ nombre: 'Jorge Lorenzo', nacionalidad: 'ESP', edad: 33, moto_id: id })
           .end((err, res) => {
             res.should.have.status(201);
             res.body.should.have.property('id');
-            expect(res.body).to.have.property('nombre', 'P3');
+            expect(res.body).to.have.property('nombre', 'Jorge Lorenzo');
             done();
           });
       });
@@ -88,7 +93,7 @@ describe('pilotos', () => {
       db('motos').first('id').then(({ id }) => {
         chai.request(app)
           .post('/pilotos')
-          .send({ nacionalidad: 'N4', edad: 20, moto_id: id })
+          .send({ nacionalidad: 'RUS', edad: 25, moto_id: id })
           .end((err, res) => {
             res.should.have.status(400);
             expect(res.body.status).to.equal('bad-request');

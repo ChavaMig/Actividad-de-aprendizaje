@@ -25,7 +25,7 @@ describe('motos', () => {
       .then(() => db('motos').del())
       .then(() => db('motos').insert([
         { modelo: 'Honda CBR600RR', marca: 'Honda', año: 2000, tipo: 'Deportiva' },
-        { modelo: 'Kawashaki Ninja', marca: 'Kawashaki', año: 2001, tipo: 'Deportiva' }
+        { modelo: 'Kawasaki Ninja ZX-6R', marca: 'Kawasaki', año: 2001, tipo: 'Deportiva' }
       ]))
       .then(() => done())
       .catch(done);
@@ -38,11 +38,9 @@ describe('motos', () => {
         .end((err, res) => {
           res.should.have.status(200);
           res.body.should.be.a('array');
-          // Validar que hay exactamente 2 motos
           expect(res.body).to.have.lengthOf(2);
-          // Comprobar modelos según seed
           expect(res.body[0]).to.have.property('modelo', 'Honda CBR600RR');
-          expect(res.body[1]).to.have.property('modelo', 'Kawashaki Ninja');
+          expect(res.body[1]).to.have.property('modelo', 'Kawasaki Ninja ZX-6R');
           done();
         });
     });
@@ -52,11 +50,11 @@ describe('motos', () => {
     it('should register a new moto', (done) => {
       chai.request(app)
         .post('/motos')
-        .send({ modelo: 'NewMoto', marca: 'New', año: 2022, tipo: 'Z' })
+        .send({ modelo: 'Yamaha YZF-R6', marca: 'Yamaha', año: 2022, tipo: 'Deportiva' })
         .end((err, res) => {
           res.should.have.status(201);
           res.body.should.have.property('id');
-          expect(res.body).to.have.property('modelo', 'NewMoto');
+          expect(res.body).to.have.property('modelo', 'Yamaha YZF-R6');
           done();
         });
     });
@@ -64,7 +62,7 @@ describe('motos', () => {
     it('validation should fail because modelo is mandatory', (done) => {
       chai.request(app)
         .post('/motos')
-        .send({ marca: 'NoMod', año: 2022, tipo: 'Z' })
+        .send({ marca: 'Suzuki', año: 2022, tipo: 'Deportiva' })
         .end((err, res) => {
           res.should.have.status(400);
           expect(res.body.status).to.equal('bad-request');
@@ -76,18 +74,19 @@ describe('motos', () => {
 
   describe('PUT /motos/:modelo', () => {
     it('should update an existing moto', (done) => {
-      db('motos').insert({ modelo: 'ToUpd', marca: 'A', año: 2005, tipo: 'A' })
+      db('motos').insert({ modelo: 'Aprilia RSV4', marca: 'Aprilia', año: 2005, tipo: 'Deportiva' })
         .then(() => {
           chai.request(app)
-            .put('/motos/ToUpd')
-            .send({ modelo: 'ToUpd', marca: 'B', año: 2006, tipo: 'B' })
+            .put('/motos/Aprilia RSV4')
+            .send({ modelo: 'Aprilia RSV4', marca: 'Aprilia', año: 2006, tipo: 'Superbike' })
             .end((_, res) => {
               res.should.have.status(204);
               chai.request(app)
-                .get('/motos/ToUpd')
+                .get('/motos/Aprilia RSV4')
                 .end((__, r2) => {
                   r2.should.have.status(200);
-                  expect(r2.body.marca).to.equal('B');
+                  expect(r2.body.marca).to.equal('Aprilia');
+                  expect(r2.body.tipo).to.equal('Superbike');
                   done();
                 });
             });
@@ -97,8 +96,8 @@ describe('motos', () => {
 
     it('should return 404 for non-existent moto', (done) => {
       chai.request(app)
-        .put('/motos/NoExiste')
-        .send({ modelo: 'NoExiste', marca: 'X', año: 1111, tipo: 'Y' })
+        .put('/motos/NonExistentModel')
+        .send({ modelo: 'NonExistentModel', marca: 'X', año: 1111, tipo: 'Y' })
         .end((_, res) => {
           res.should.have.status(404);
           done();
@@ -108,14 +107,14 @@ describe('motos', () => {
 
   describe('DELETE /motos/:modelo', () => {
     it('should delete an existing moto', (done) => {
-      db('motos').insert({ modelo: 'ToDel', marca: 'X', año: 1999, tipo: 'X' })
+      db('motos').insert({ modelo: 'KTM 1290 Super Duke R', marca: 'KTM', año: 1999, tipo: 'Naked' })
         .then(() => {
           chai.request(app)
-            .delete('/motos/ToDel')
+            .delete('/motos/KTM 1290 Super Duke R')
             .end((_, res) => {
               res.should.have.status(204);
               chai.request(app)
-                .get('/motos/ToDel')
+                .get('/motos/KTM 1290 Super Duke R')
                 .end((__, r2) => {
                   r2.should.have.status(404);
                   done();
@@ -127,7 +126,7 @@ describe('motos', () => {
 
     it('should return 404 when deleting non-existent moto', (done) => {
       chai.request(app)
-        .delete('/motos/NoExiste')
+        .delete('/motos/NonExistentModel')
         .end((_, res) => {
           res.should.have.status(404);
           done();
