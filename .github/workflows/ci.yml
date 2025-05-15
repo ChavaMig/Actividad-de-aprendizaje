@@ -3,8 +3,6 @@ name: CI
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
   test:
@@ -20,15 +18,10 @@ jobs:
           MARIADB_PASSWORD: password
         ports:
           - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h localhost -prootpassword"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+        # ← Quitar options: [...] que definía el health-check
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -36,35 +29,27 @@ jobs:
           node-version: '18'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install deps
         working-directory: Backend
         run: npm ci
+
+      - name: Wait for MariaDB to be ready
+        run: |
+          for i in $(seq 1 15); do
+            mysql -h 127.0.0.1 -uroot -prootpassword -e "SELECT 1" && break
+            echo "MariaDB no está lista, esperando..."
+            sleep 5
+          done
+
+      - name: Run migrations & seeds
+        working-directory: Backend
+        run: |
+          npx sequelize-cli db:migrate --env test
+          npx sequelize-cli db:seed:all    --env test
 
       - name: Run unit tests
         working-directory: Backend
         run: npm run unit-test
-
-      - name: Set DB host to localhost for CI
-        working-directory: Backend
-        run: |
-          sed -i 's/host:.*/host: localhost/' src/config/config.prod.yaml
-          cp src/config/config.prod.yaml src/config/config.local.yaml
-
-      - name: Wait for DB to be ready
-        run: |
-          for i in {1..10}; do
-            mysql -h localhost -uroot -prootpassword -e "SELECT 1" && break
-            echo "Waiting for DB..."
-            sleep 5
-          done
-
-      - name: Run database migrations
-        working-directory: Backend
-        run: npx sequelize-cli db:migrate --env test
-
-      - name: Seed database
-        working-directory: Backend
-        run: npx sequelize-cli db:seed:all --env test
 
       - name: Run integration tests
         working-directory: Backend
