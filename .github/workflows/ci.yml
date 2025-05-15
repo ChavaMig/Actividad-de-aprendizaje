@@ -3,94 +3,62 @@ name: CI
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
-  test:
+  test-backend:
+    name: Test Backend
     runs-on: ubuntu-latest
 
     services:
       db:
-        image: mariadb:11.3.2
+        image: mariadb:11
         env:
-          MARIADB_ROOT_PASSWORD: rootpassword
-          MARIADB_DATABASE: motos
-          MARIADB_USER: app_user
-          MARIADB_PASSWORD: password
+          MYSQL_ROOT_PASSWORD: nerea
+          MYSQL_DATABASE: orgempresa
         ports:
           - 3306:3306
-        
+        options: >-
+          --health-cmd "echo OK"
+          --health-interval=5s
+          --health-timeout=2s
+          --health-retries=1
 
     steps:
-      - name: Checkout repo
+      - name: bajar codigo
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: instalar node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
-          cache: "npm"
+          node-version: '18'
 
-      - name: List workspace
+      - name: instalar dependencias
+        run: npm ci
+
+      - name: esperar a que levante mariadb
+        run: npx wait-on tcp:3306
+
+      - name: instalar cliente sql
+        # necesario para poder ejecutar el script para meter datos
+        run: sudo apt-get update && sudo apt-get install -y mysql-client
+
+      - name: inicializar base de datos
+        # cargamos todas las tablas y datos
+        run: mysql -h 127.0.0.1 -P 3306 -u root -pnerea orgempresa < db/script.sql
+
+      - name: ejecutar test de itegracion y unitarios
+        run: npm test
+
+      - name: docker backend
         run: |
-          pwd
-          ls -R .
+          docker build \
+            -t orgempresa-backend:${{ github.sha }} \
+            -f backend/Dockerfile \
+            .
 
-      - name: Run unit tests
-        working-directory: Backend
+      - name: docker frontend
         run: |
-          npm install
-          npm run unit-test
-
-      - name: Set DB host to localhost for CI
-        working-directory: Backend
-        run: |
-          sed -i 's/host: .*/host: localhost/' src/config/config.prod.yaml
-          cp src/config/config.prod.yaml src/config/config.local.yaml
-
-      - name: Run integration tests
-        working-directory: Backend
-        run: npm run integration-test
-
-  build-and-push:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Setup QEMU
-        uses: docker/setup-qemu-action@v2
-
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Login to GHCR
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build & push backend image
-        uses: docker/build-push-action@v4
-        with:
-          context: Backend
-          file: Backend/Dockerfile
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/motos-backend:latest
-            ghcr.io/${{ github.repository_owner }}/motos-backend:${{ github.sha }}
-
-      - name: Build & push frontend image
-        uses: docker/build-push-action@v4
-        with:
-          context: frontend
-          file: frontend/Dockerfile
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/motos-frontend:latest
-            ghcr.io/${{ github.repository_owner }}/motos-frontend:${{ github.sha }}
+          docker build \
+            -t orgempresa-frontend:${{ github.sha }} \
+            -f frontend/Dockerfile \
+            .

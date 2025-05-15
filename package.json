@@ -1,0 +1,18 @@
+{
+  "name": "motos-aa",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "start:backend": "npm --prefix backend run start",
+    "start:frontend": "npm --prefix frontend run start",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "test": "npm --prefix backend test"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  }
+}
+

@@ -23,10 +23,14 @@ const app = express();
 // CORS
 const corsOptions = {
   origin: 'http://localhost:1234',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type']
 };
+// Aplica CORS a todas las rutas
 app.use(cors(corsOptions));
+// Maneja preflight de OPTIONS
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
 
 // Prometheus metrics 
@@ -53,12 +57,10 @@ app.get('/metrics', async (req, res) => {
   res.end(await promClient.register.metrics());
 });
 
-
 app.use((req, res, next) => {
   req.app.db = db;
   next();
 });
-
 
 app.get('/', (req, res) => {
   res.send('🚀 API de Motos y Pilotos: usa /motos, /pilotos o /metrics');
