@@ -3,66 +3,69 @@ name: CI
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  test-backend:
-    name: Test Backend
+  test:
     runs-on: ubuntu-latest
 
     services:
       db:
-        image: mariadb:11
+        image: mariadb:11.3.2
         env:
-          MYSQL_ROOT_PASSWORD: password
-          MYSQL_DATABASE: motos
+          MARIADB_ROOT_PASSWORD: rootpassword
+          MARIADB_DATABASE: motos
+          MARIADB_USER: app_user
+          MARIADB_PASSWORD: password
         ports:
           - 3306:3306
         options: >-
-          --health-cmd "echo OK"
-          --health-interval=5s
-          --health-timeout=2s
-          --health-retries=1
+          --health-cmd="mysqladmin ping -h localhost -prootpassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
-      - name: ↓ Descargar código
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name:  Instalar Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+          cache: 'npm'
 
-      - name:  Instalar dependencias
+      - name: Install dependencies
+        working-directory: Backend
         run: npm ci
 
-      - name:  Esperar a MariaDB
-        run: npx wait-on tcp:3306
+      - name: Run unit tests
+        working-directory: Backend
+        run: npm run unit-test
 
-      - name:  Instalar cliente MySQL
-        run: sudo apt-get update && sudo apt-get install -y mysql-client
-
-      - name:  Inicializar base de datos
+      - name: Set DB host to localhost for CI
+        working-directory: Backend
         run: |
-          mysql \
-            -h 127.0.0.1 \
-            -P 3306 \
-            -u root \
-            -ppassword \
-            motos < db/script.sql
+          sed -i 's/host:.*/host: localhost/' src/config/config.prod.yaml
+          cp src/config/config.prod.yaml src/config/config.local.yaml
 
-      - name:  Ejecutar tests
-        run: npm test
-
-      - name:  Construir imagen backend
+      - name: Wait for DB to be ready
         run: |
-          docker build \
-            -t motos-backend:${{ github.sha }} \
-            -f backend/Dockerfile \
-            .
+          for i in {1..10}; do
+            mysql -h localhost -uroot -prootpassword -e "SELECT 1" && break
+            echo "Waiting for DB..."
+            sleep 5
+          done
 
-      - name:  Construir imagen frontend
-        run: |
-          docker build \
-            -t motos-frontend:${{ github.sha }} \
-            -f frontend/Dockerfile \
-            .
+      - name: Run database migrations
+        working-directory: Backend
+        run: npx sequelize-cli db:migrate --env test
+
+      - name: Seed database
+        working-directory: Backend
+        run: npx sequelize-cli db:seed:all --env test
+
+      - name: Run integration tests
+        working-directory: Backend
+        run: npm run integration-test
