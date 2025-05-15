@@ -43,7 +43,7 @@ describe('pilotos', () => {
       .then(() => db('motos').insert({ modelo: 'Seed1', marca: 'M1', año: 2000, tipo: 'X' }))
       .then(insertIds => {
         const motoId = insertIds[0];
-        //  Insertar pilotos con referencia a esa moto
+        // Insertar pilotos con referencia a esa moto
         return db('pilotos').insert([
           { nombre: 'Marc Marquez', nacionalidad: 'ESP', edad: 30, moto_id: motoId },
           { nombre: 'Valentino Rossi', nacionalidad: 'ITA', edad: 40, moto_id: motoId }
@@ -60,8 +60,9 @@ describe('pilotos', () => {
         .end((err, res) => {
           res.should.have.status(200);
           res.body.should.be.a('array');
-          expect(res.body[0]).to.have.property('nombre', 'P1');
-          expect(res.body[1]).to.have.property('nombre', 'P2');
+          // Validar nombres de pilotos según los datos seed actualizados
+          expect(res.body[0]).to.have.property('nombre', 'Marc Marquez');
+          expect(res.body[1]).to.have.property('nombre', 'Valentino Rossi');
           done();
         });
     });
