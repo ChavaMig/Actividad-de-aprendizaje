@@ -18,8 +18,7 @@ jobs:
           MARIADB_PASSWORD: password
         ports:
           - 3306:3306
-        # ← Quitar options: [...] que definía el health-check
-
+        
     steps:
       - uses: actions/checkout@v3
 
@@ -27,25 +26,19 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: 'npm'
+          cache: npm
 
       - name: Install deps
         working-directory: Backend
         run: npm ci
 
-      - name: Wait for MariaDB to be ready
+      - name: Wait for MariaDB
         run: |
           for i in $(seq 1 15); do
             mysql -h 127.0.0.1 -uroot -prootpassword -e "SELECT 1" && break
-            echo "MariaDB no está lista, esperando..."
+            echo "Esperando a MariaDB…"
             sleep 5
           done
-
-      - name: Run migrations & seeds
-        working-directory: Backend
-        run: |
-          npx sequelize-cli db:migrate --env test
-          npx sequelize-cli db:seed:all    --env test
 
       - name: Run unit tests
         working-directory: Backend
@@ -54,3 +47,4 @@ jobs:
       - name: Run integration tests
         working-directory: Backend
         run: npm run integration-test
+
