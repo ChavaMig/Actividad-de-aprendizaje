@@ -38,8 +38,11 @@ describe('motos', () => {
         .end((err, res) => {
           res.should.have.status(200);
           res.body.should.be.a('array');
-          expect(res.body[0]).to.have.property('modelo');
-          expect(res.body[1].modelo).to.equal('Seed2');
+          // Validar que hay exactamente 2 motos
+          expect(res.body).to.have.lengthOf(2);
+          // Comprobar modelos según seed
+          expect(res.body[0]).to.have.property('modelo', 'Honda CBR600RR');
+          expect(res.body[1]).to.have.property('modelo', 'Kawashaki Ninja');
           done();
         });
     });
