@@ -45,8 +45,8 @@ describe('pilotos', () => {
         const motoId = insertIds[0];
         //  Insertar pilotos con referencia a esa moto
         return db('pilotos').insert([
-          { nombre: 'P1', nacionalidad: 'N1', edad: 30, moto_id: motoId },
-          { nombre: 'P2', nacionalidad: 'N2', edad: 25, moto_id: motoId }
+          { nombre: 'Marc Marquez', nacionalidad: 'ESP', edad: 30, moto_id: motoId },
+          { nombre: 'Valentino Rossi', nacionalidad: 'ITA', edad: 40, moto_id: motoId }
         ]);
       })
       .then(() => done())

@@ -1,3 +1,13 @@
-.parcel-cache
+
 dist
 node_module
+
+
+node_modules
+npm-debug.log
+.git
+.gitignore
+
+
+db
+frontend/dist

@@ -38,4 +38,5 @@ git clone https://github.com/ChavaMig/Actividad-de-aprendizaje
 cd Actividad-de-aprendizaje
 
 
-
+// INICIAR DOCKER COMPOSE TEST
+docker compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from integration_tests

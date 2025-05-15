@@ -24,8 +24,8 @@ describe('motos', () => {
       })
       .then(() => db('motos').del())
       .then(() => db('motos').insert([
-        { modelo: 'Seed1', marca: 'M1', año: 2000, tipo: 'X' },
-        { modelo: 'Seed2', marca: 'M2', año: 2001, tipo: 'Y' }
+        { modelo: 'Honda CBR600RR', marca: 'Honda', año: 2000, tipo: 'Deportiva' },
+        { modelo: 'Kawashaki Ninja', marca: 'Kawashaki', año: 2001, tipo: 'Deportiva' }
       ]))
       .then(() => done())
       .catch(done);

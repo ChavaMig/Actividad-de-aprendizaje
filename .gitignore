@@ -4,6 +4,8 @@ npm-debug.log*
 
 # NPM cache
 .npm-cache/
+/Backend/npm-cache/
+**/npm-cache/
 
 # Parcel / frontend build
 .parcel-cache/

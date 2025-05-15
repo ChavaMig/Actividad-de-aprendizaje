@@ -1,15 +1,17 @@
-const yaml = require('js-yaml');
-const fs   = require('fs');
-const yargs = require('yargs/yargs');
+const yaml   = require('js-yaml');
+const fs     = require('fs');
+const yargs  = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
 
-
-let configFile = 'src/config/config.local.yaml';
-
 const argv = yargs(hideBin(process.argv)).argv;
+
+let configFile;
 if (argv.config) {
-  
   configFile = argv.config;
+} else if (process.env.NODE_ENV === 'production') {
+  configFile = 'src/config/config.prod.yaml';
+} else {
+  configFile = 'src/config/config.local.yaml';
 }
 
 const config = yaml.load(
