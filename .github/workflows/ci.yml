@@ -20,7 +20,11 @@ jobs:
           MARIADB_PASSWORD: password
         ports:
           - 3306:3306
-        
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -prootpassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - name: Checkout repo
@@ -29,25 +33,38 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
-          cache: "npm"
+          node-version: '18'
+          cache: 'npm'
 
-      - name: List workspace
-        run: |
-          pwd
-          ls -R .
+      - name: Install dependencies
+        working-directory: Backend
+        run: npm ci
 
       - name: Run unit tests
         working-directory: Backend
-        run: |
-          npm install
-          npm run unit-test
+        run: npm run unit-test
 
       - name: Set DB host to localhost for CI
         working-directory: Backend
         run: |
-          sed -i 's/host: .*/host: localhost/' src/config/config.prod.yaml
+          sed -i 's/host:.*/host: localhost/' src/config/config.prod.yaml
           cp src/config/config.prod.yaml src/config/config.local.yaml
+
+      - name: Wait for DB to be ready
+        run: |
+          for i in {1..10}; do
+            mysql -h localhost -uroot -prootpassword -e "SELECT 1" && break
+            echo "Waiting for DB..."
+            sleep 5
+          done
+
+      - name: Run database migrations
+        working-directory: Backend
+        run: npx sequelize-cli db:migrate --env test
+
+      - name: Seed database
+        working-directory: Backend
+        run: npx sequelize-cli db:seed:all --env test
 
       - name: Run integration tests
         working-directory: Backend
