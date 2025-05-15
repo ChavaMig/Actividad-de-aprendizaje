@@ -5,64 +5,52 @@ on:
     branches: [ main ]
 
 jobs:
-  test-backend:
-    name: Test Backend
+  test:
     runs-on: ubuntu-latest
 
     services:
       db:
-        image: mariadb:11
+        image: mariadb:11.3.2
         env:
-          MYSQL_ROOT_PASSWORD: password
-          MYSQL_DATABASE: motos
+          MARIADB_ROOT_PASSWORD: rootpassword
+          MARIADB_DATABASE: motos
+          MARIADB_USER: app_user
+          MARIADB_PASSWORD: password
         ports:
           - 3306:3306
-        options: >-
-          --health-cmd "echo OK"
-          --health-interval=5s
-          --health-timeout=2s
-          --health-retries=1
+        # ← Quitar options: [...] que definía el health-check
 
     steps:
-      - name: ↓ Descargar código
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name:  Instalar Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+          cache: 'npm'
 
-      - name:  Instalar dependencias
+      - name: Install deps
+        working-directory: Backend
         run: npm ci
 
-      - name:  Esperar a MariaDB
-        run: npx wait-on tcp:3306
-
-      - name:  Instalar cliente MySQL
-        run: sudo apt-get update && sudo apt-get install -y mysql-client
-
-      - name:  Inicializar base de datos
+      - name: Wait for MariaDB to be ready
         run: |
-          mysql \
-            -h 127.0.0.1 \
-            -P 3306 \
-            -u root \
-            -ppassword \
-            motos < db/script.sql
+          for i in $(seq 1 15); do
+            mysql -h 127.0.0.1 -uroot -prootpassword -e "SELECT 1" && break
+            echo "MariaDB no está lista, esperando..."
+            sleep 5
+          done
 
-      - name:  Ejecutar tests
-        run: npm test
-
-      - name:  Construir imagen backend
+      - name: Run migrations & seeds
+        working-directory: Backend
         run: |
-          docker build \
-            -t motos-backend:${{ github.sha }} \
-            -f backend/Dockerfile \
-            .
+          npx sequelize-cli db:migrate --env test
+          npx sequelize-cli db:seed:all    --env test
 
-      - name:  Construir imagen frontend
-        run: |
-          docker build \
-            -t motos-frontend:${{ github.sha }} \
-            -f frontend/Dockerfile \
-            .
+      - name: Run unit tests
+        working-directory: Backend
+        run: npm run unit-test
+
+      - name: Run integration tests
+        working-directory: Backend
+        run: npm run integration-test
